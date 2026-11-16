@@ -1,0 +1,20 @@
+(() => {
+  const canvas = document.querySelector('#stars');
+  const ctx = canvas.getContext('2d');
+  let width, height, stars = [], pointer = {x: -1000, y: -1000};
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function resize(){ width=canvas.width=innerWidth*devicePixelRatio; height=canvas.height=innerHeight*devicePixelRatio; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); stars=Array.from({length:Math.min(95,Math.floor(innerWidth/14))},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.5+.35,a:Math.random()*.7+.2,p:Math.random()*6.28,s:Math.random()*.012+.003})); }
+  function draw(){ctx.clearRect(0,0,innerWidth,innerHeight);for(const s of stars){if(!reduced)s.p+=s.s;const twinkle=.55+.45*Math.sin(s.p);ctx.beginPath();ctx.fillStyle=`rgba(210,194,255,${s.a*twinkle})`;ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();const dx=s.x-pointer.x,dy=s.y-pointer.y,d=Math.hypot(dx,dy);if(d<95&&d>0){ctx.beginPath();ctx.strokeStyle=`rgba(205,151,238,${(1-d/95)*.18})`;ctx.moveTo(s.x,s.y);ctx.lineTo(s.x+dx/d*8,s.y+dy/d*8);ctx.stroke();}}if(!reduced)requestAnimationFrame(draw);}
+  resize();draw();addEventListener('resize',resize);addEventListener('pointermove',e=>pointer={x:e.clientX,y:e.clientY},{passive:true});
+  const menu=document.querySelector('.menu-toggle'), nav=document.querySelector('.nav');
+  menu.addEventListener('click',()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));});
+  nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');menu.setAttribute('aria-expanded','false');}));
+  const top=document.querySelector('.to-top');addEventListener('scroll',()=>top.classList.toggle('visible',scrollY>500),{passive:true});top.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');observer.unobserve(e.target);}}),{threshold:.12});document.querySelectorAll('.section-index,.about-layout,.about-stats,.work-heading,.project-card,.project-footnote,.contact-copy,.contact-button,.social-links').forEach(el=>{el.classList.add('reveal');observer.observe(el);});
+  const toast=document.querySelector('.toast');let toastTimer;function showToast(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);}
+  // Browser audio starts only after a deliberate click; generated tones keep the page dependency-free.
+  let audio=null,osc=null,gain=null,soundOn=false;document.querySelector('.sound-toggle').addEventListener('click',()=>{try{if(!audio){audio=new AudioContext();osc=audio.createOscillator();gain=audio.createGain();osc.type='sine';osc.frequency.value=174.61;gain.gain.value=0;osc.connect(gain).connect(audio.destination);osc.start();}soundOn=!soundOn;if(soundOn){audio.resume();gain.gain.setTargetAtTime(.012,audio.currentTime,.25);osc.frequency.setTargetAtTime(196,audio.currentTime,.8);}else gain.gain.setTargetAtTime(0,audio.currentTime,.15);document.querySelector('.sound-toggle').innerHTML=`♫ <span>${soundOn?'ĐANG BẬT':'ÂM THANH'}</span>`;showToast(soundOn?'Âm thanh nền đã bật':'Đã tắt âm thanh');}catch{showToast('Trình duyệt chưa hỗ trợ âm thanh');}});
+  document.querySelectorAll('.project-card').forEach(card=>card.addEventListener('click',()=>showToast('Một ý tưởng nhỏ đang chờ được hoàn thiện ✦')));
+  document.querySelectorAll('.button').forEach(el=>el.classList.add('magnetic'));
+  if(!matchMedia('(pointer: coarse)').matches){document.querySelectorAll('.magnetic').forEach(el=>el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect();el.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.08}px,${(e.clientY-r.top-r.height/2)*.08}px)`;}));document.querySelectorAll('.magnetic').forEach(el=>el.addEventListener('pointerleave',()=>el.style.transform=''));}
+})();
