@@ -6,6 +6,49 @@
   function resize(){ width=canvas.width=innerWidth*devicePixelRatio; height=canvas.height=innerHeight*devicePixelRatio; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); stars=Array.from({length:Math.min(95,Math.floor(innerWidth/14))},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.5+.35,a:Math.random()*.7+.2,p:Math.random()*6.28,s:Math.random()*.012+.003})); }
   function draw(){ctx.clearRect(0,0,innerWidth,innerHeight);for(const s of stars){if(!reduced)s.p+=s.s;const twinkle=.55+.45*Math.sin(s.p);ctx.beginPath();ctx.fillStyle=`rgba(210,194,255,${s.a*twinkle})`;ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();const dx=s.x-pointer.x,dy=s.y-pointer.y,d=Math.hypot(dx,dy);if(d<95&&d>0){ctx.beginPath();ctx.strokeStyle=`rgba(205,151,238,${(1-d/95)*.18})`;ctx.moveTo(s.x,s.y);ctx.lineTo(s.x+dx/d*8,s.y+dy/d*8);ctx.stroke();}}if(!reduced)requestAnimationFrame(draw);}
   resize();draw();addEventListener('resize',resize);addEventListener('pointermove',e=>pointer={x:e.clientX,y:e.clientY},{passive:true});
+  const hero=document.querySelector('.hero');
+  const moteLayer=document.querySelector('.hero-motes');
+  if(!reduced&&moteLayer){
+    const symbols=['✦','✧','•','✧'];
+    for(let i=0;i<28;i++){
+      const mote=document.createElement('span');
+      mote.className=`hero-mote${Math.random()>.58?' petal':''}`;
+      mote.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+      mote.style.left=`${Math.random()*100}%`;
+      mote.style.setProperty('--duration',`${9+Math.random()*12}s`);
+      mote.style.setProperty('--delay',`${-Math.random()*20}s`);
+      mote.style.setProperty('--drift',`${Math.random()*140-70}px`);
+      mote.style.fontSize=`${7+Math.random()*10}px`;
+      moteLayer.appendChild(mote);
+    }
+  }
+  if(hero&&!reduced&&!matchMedia('(pointer: coarse)').matches){
+    const move=(e)=>{
+      const r=hero.getBoundingClientRect();
+      const x=(e.clientX-r.left-r.width/2)/r.width;
+      const y=(e.clientY-r.top-r.height/2)/r.height;
+      hero.style.setProperty('--scene-x',`${x*-13}px`);
+      hero.style.setProperty('--scene-y',`${y*-9}px`);
+      hero.style.setProperty('--haze-x',`${x*28}px`);
+      hero.style.setProperty('--haze-y',`${y*18}px`);
+      hero.style.setProperty('--student-x',`${x*-17}px`);
+      hero.style.setProperty('--student-y',`${y*-9}px`);
+    };
+    hero.addEventListener('pointermove',move,{passive:true});
+    hero.addEventListener('pointerleave',()=>{
+      for(const key of ['--scene-x','--scene-y','--haze-x','--haze-y','--student-x','--student-y'])hero.style.removeProperty(key);
+    },{passive:true});
+  }else if(hero&&!reduced){
+    let ticking=false;
+    addEventListener('scroll',()=>{
+      if(ticking)return;ticking=true;
+      requestAnimationFrame(()=>{
+        const rect=hero.getBoundingClientRect();
+        hero.style.setProperty('--scene-y',`${Math.max(-18,Math.min(0,rect.top*.035))}px`);
+        ticking=false;
+      });
+    },{passive:true});
+  }
   const menu=document.querySelector('.menu-toggle'), nav=document.querySelector('.nav');
   menu.addEventListener('click',()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));});
   nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');menu.setAttribute('aria-expanded','false');}));
