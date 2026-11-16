@@ -52,6 +52,28 @@
   const menu=document.querySelector('.menu-toggle'), nav=document.querySelector('.nav');
   menu.addEventListener('click',()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));});
   nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');menu.setAttribute('aria-expanded','false');}));
+  const characterMessage=document.querySelector('.character-message');
+  if(characterMessage){
+    const lines=['Một ngày mới, một ý tưởng mới! ✦','Chào mừng bạn ghé vào góc nhỏ của Điền!','Mình đang lưu một chút nắng vào kho lưu trữ đây.','Cứ thong thả khám phá nhé!'];
+    let lastLine=-1;
+    characterMessage.addEventListener('click',()=>{
+      let next=Math.floor(Math.random()*lines.length);
+      if(lines.length>1&&next===lastLine)next=(next+1)%lines.length;
+      lastLine=next;characterMessage.innerHTML=`${lines[next]} <span>✦</span>`;
+      characterMessage.classList.remove('say-line');void characterMessage.offsetWidth;characterMessage.classList.add('say-line');
+    });
+  }
+  const fullscreen=document.querySelector('.fullscreen-toggle');
+  fullscreen?.addEventListener('click',async()=>{
+    try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}
+    catch{showToast('Trình duyệt chưa cho phép toàn màn hình');}
+  });
+  document.addEventListener('fullscreenchange',()=>{
+    if(!fullscreen)return;
+    const active=Boolean(document.fullscreenElement);
+    fullscreen.textContent=active?'⛶':'⛶';
+    fullscreen.setAttribute('aria-label',active?'Thoát toàn màn hình':'Bật toàn màn hình');
+  });
   const top=document.querySelector('.to-top');addEventListener('scroll',()=>top.classList.toggle('visible',scrollY>500),{passive:true});top.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
   const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');observer.unobserve(e.target);}}),{threshold:.12});document.querySelectorAll('.section-index,.about-layout,.about-stats,.work-heading,.project-card,.project-footnote,.contact-copy,.contact-button,.social-links').forEach(el=>{el.classList.add('reveal');observer.observe(el);});
   const toast=document.querySelector('.toast');let toastTimer;function showToast(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);}
